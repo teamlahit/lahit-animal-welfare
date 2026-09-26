@@ -8,7 +8,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
 import PublicSiteGate from '@/components/PublicSiteGate';
-import { BLOG_CATEGORIES } from '@/lib/blog-categories';
 
 export default function BlogPage() {
   const [posts, setPosts] = useState([]);
@@ -23,7 +22,7 @@ export default function BlogPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const categories = [...new Set([...BLOG_CATEGORIES, ...posts.map((post) => post.category).filter(Boolean)])];
+  const categories = [...new Set(posts.map((post) => post.category || 'General'))];
   const visiblePosts = activeCategory === 'All' ? posts : posts.filter((post) => (post.category || 'General') === activeCategory);
 
   function handleImageError(id) {
