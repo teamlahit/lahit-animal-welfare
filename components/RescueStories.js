@@ -174,13 +174,17 @@ export default function RescueStories() {
         )}
 
         {posts.length > 0 && (
-          <div className="mt-14 border-t border-primary/10 pt-10">
+          <div className="mt-12 border-t border-primary/10 pt-8 sm:mt-14 sm:pt-10">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <span className="badge badge-secondary badge-outline mb-3">LAHIT updates</span>
-                <h3 className="text-2xl font-bold tracking-[-0.04em] text-primary sm:text-3xl">More from the field</h3>
+                <h3 className="text-2xl font-bold tracking-[-0.04em] text-primary sm:text-3xl">Field notes & updates</h3>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-primary/65">Follow the care, community work, and progress behind each rescue.</p>
               </div>
-              <Button href="/blog" variant="outline" size="sm" icon={ArrowRight}>Browse all updates</Button>
+              <div className="flex flex-wrap gap-3">
+                <Button href="/rescues" variant="outline" size="sm" icon={ArrowRight}>All rescue stories</Button>
+                <Button href="/blog" variant="primary" size="sm" icon={ArrowRight}>All field updates</Button>
+              </div>
             </div>
             <div className="grid gap-5 md:grid-cols-2">
               {posts.map((post) => (
@@ -200,23 +204,6 @@ export default function RescueStories() {
           </div>
         )}
 
-        {/* CTA */}
-        {!loading && rescues.length > 0 && <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <Button
-            href="/rescues"
-            variant="outline"
-            size="lg"
-            icon={ArrowRight}
-          >
-            View More
-          </Button>
-        </motion.div>}
       </Container>
     </section>
   );

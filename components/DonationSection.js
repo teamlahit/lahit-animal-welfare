@@ -76,12 +76,7 @@ export default function DonationSection() {
     branch: settings?.bankBranch || '',
   };
   const bankConfigured = Boolean(bankDetails.accountNumber && bankDetails.ifscCode);
-  const donationTiers = (settings?.donationTiers || [
-    { id: 1, amount: 500, title: 'Daily Meals', description: 'Feed stray dogs for a day', icon: 'Utensils', impact: 'Provides nutritious meals for 10 street dogs' },
-    { id: 2, amount: 1500, title: 'Vaccination', description: 'Vaccination for one animal', icon: 'Syringe', impact: 'Complete vaccination course for a rescued animal' },
-    { id: 3, amount: 3000, title: 'Emergency Treatment', description: 'Emergency treatment support', icon: 'HeartPulse', impact: 'Covers emergency medical treatment and medicines' },
-    { id: 4, amount: 5000, title: 'Rescue Mission', description: 'Fund a complete rescue', icon: 'Ambulance', impact: 'Covers rescue, treatment, and rehabilitation' }
-  ]).filter((tier) => tier.title?.trim().toLowerCase() !== '2 manti');
+  const donationTiers = (settings?.donationTiers || []).filter((tier) => tier.title?.trim().toLowerCase() !== '2 manti');
 
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text);
@@ -118,7 +113,7 @@ export default function DonationSection() {
           </div>
         ) : (
           <>
-            <div className="mb-10 grid grid-cols-2 gap-3 sm:mb-16 sm:gap-6 lg:grid-cols-4">
+            {donationTiers.length > 0 ? <div className="mb-10 grid grid-cols-2 gap-3 sm:mb-16 sm:gap-6 lg:grid-cols-4">
               {donationTiers.map((tier, index) => {
                 const Icon = getTierIcon(tier);
                 return (
@@ -157,7 +152,7 @@ export default function DonationSection() {
                   </motion.div>
                 );
               })}
-            </div>
+            </div> : <p className="mb-10 text-center text-primary/60">Donation options will appear here once added by the LAHIT team.</p>}
 
             {/* Payment Methods */}
             <motion.div

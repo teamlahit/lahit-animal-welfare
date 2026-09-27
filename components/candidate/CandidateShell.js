@@ -25,7 +25,7 @@ export default function CandidateShell({ children, user }) {
   return (
     <div className="min-h-screen bg-[#ece9e1] lg:flex">
       {open && <button type="button" aria-label="Close navigation" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-primary/55 backdrop-blur-sm lg:hidden" />}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col bg-primary text-white transition-transform duration-300 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[min(272px,calc(100vw-1rem))] flex-col bg-primary text-white transition-transform duration-300 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex min-h-24 items-center justify-between border-b border-white/10 px-6">
           <Link href="/candidate/" onClick={() => setOpen(false)} className="flex items-center gap-3">
             <span className="relative h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-white"><Image src="/lahit.png" alt="LAHIT" fill className="object-cover" /></span>
@@ -40,7 +40,7 @@ export default function CandidateShell({ children, user }) {
           <p className="truncate text-xs text-white/50">{user?.email}</p>
         </div>
 
-        <nav className="flex-1 px-4 py-6">
+        <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-6">
           <p className="mb-3 px-3 text-[0.6rem] font-black uppercase tracking-[0.18em] text-white/35">Your workspace</p>
           <ul className="space-y-1">
             {navItems.map((item) => {
@@ -63,7 +63,7 @@ export default function CandidateShell({ children, user }) {
 
       <div className="min-w-0 flex-1 lg:ml-[272px]">
         <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between border-b border-primary/10 bg-[#f8f6f0]/90 px-5 backdrop-blur sm:px-8 lg:px-10">
-          <div className="flex items-center gap-3"><button type="button" onClick={() => setOpen(true)} aria-label="Open navigation" className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white lg:hidden"><Menu className="h-5 w-5" /></button><div><p className="text-xs font-black uppercase tracking-[0.16em] text-secondary">Candidate workspace</p><h1 className="text-lg font-black tracking-[-0.03em] text-primary sm:text-xl">Make every action count</h1></div></div>
+          <div className="flex min-w-0 items-center gap-3"><button type="button" onClick={() => setOpen(true)} aria-label="Open navigation" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white lg:hidden"><Menu className="h-5 w-5" /></button><div className="min-w-0"><p className="truncate text-xs font-black uppercase tracking-[0.16em] text-secondary">Candidate workspace</p><h1 className="truncate text-lg font-black tracking-[-0.03em] text-primary sm:text-xl">Make every action count</h1></div></div>
           <Link href="/candidate/profile/" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-black text-white" aria-label="Open profile">{(user?.name || 'V').slice(0, 1).toUpperCase()}</Link>
         </header>
         <main className="mx-auto w-full max-w-[1280px] px-5 py-7 sm:px-8 lg:px-10 lg:py-10">{children}</main>

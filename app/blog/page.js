@@ -22,8 +22,9 @@ export default function BlogPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const categories = [...new Set(posts.map((post) => post.category || 'General'))];
-  const visiblePosts = activeCategory === 'All' ? posts : posts.filter((post) => (post.category || 'General') === activeCategory);
+  const categoryFor = (post) => post.category?.trim() || 'General';
+  const categories = [...new Set(posts.map(categoryFor))];
+  const visiblePosts = activeCategory === 'All' ? posts : posts.filter((post) => categoryFor(post) === activeCategory);
 
   function handleImageError(id) {
     setImageErrors(prev => ({ ...prev, [id]: true }));
@@ -39,7 +40,7 @@ export default function BlogPage() {
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/62 sm:mt-8 sm:text-lg">Browse all LAHIT updates by category, including rescue stories, medical updates, feeding drives, adoption, and volunteer events.</p>
         </Container>
       </section>
-      <section className="section-padding">
+      <section className="px-0 pb-16 pt-10 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14">
         <Container>
           {loading ? (
             <div className="flex min-h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -66,7 +67,7 @@ export default function BlogPage() {
                     ) : (
                       <div className="flex h-full items-center justify-center"><BookOpen className="h-10 w-10 text-primary/25" /></div>
                     )}
-                    <span className="absolute top-4 left-4 rounded-full bg-accent px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.1em] text-primary">{post.category}</span>
+                    <span className="absolute top-4 left-4 rounded-full bg-accent px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.1em] text-primary">{categoryFor(post)}</span>
                   </div>
                   <div className="p-6">
                     <p className="text-xs font-bold uppercase tracking-[0.1em] text-primary/38">{new Date(post.createdAt).toLocaleDateString()}</p>

@@ -6,22 +6,6 @@ import { MapPin, Navigation, Loader2 } from 'lucide-react';
 import Container from './ui/Container';
 import dynamic from 'next/dynamic';
 
-const uttarkashiBase = {
-  id: 'uttarkashi-base',
-  name: 'Uttarkashi',
-  coordinates: [30.7268, 78.4354],
-  address: 'Uttarkashi, Uttarakhand',
-  isBase: true,
-};
-const removeShelterLocations = (locations = []) => locations.filter((location) => !/shelter/i.test(location.name || ''));
-const prepareLocations = (locations = []) => {
-  const visibleLocations = removeShelterLocations(locations);
-  const hasUttarkashi = visibleLocations.some((location) => /uttarkashi/i.test(location.name || ''));
-  return hasUttarkashi
-    ? visibleLocations.map((location) => /uttarkashi/i.test(location.name || '') ? { ...uttarkashiBase, ...location, isBase: true } : location)
-    : [uttarkashiBase, ...visibleLocations];
-};
-
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -80,7 +64,7 @@ function MapComponent({ locations }) {
     );
   }
 
-  const center = [30.7268, 78.4354];
+  const center = locations[0].coordinates;
 
   return (
     <MapContainer
@@ -118,13 +102,7 @@ function MapComponent({ locations }) {
 export default function RescueMap() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
-  const [locations, setLocations] = useState([
-    uttarkashiBase,
-    { id: 1, name: 'Dehradun Rescue Center', coordinates: [30.3165, 78.0322], address: 'Rajpur Road, Dehradun', animalsHelped: 450 },
-    { id: 2, name: 'Mussoorie Feeding Point', coordinates: [30.4598, 78.0644], address: 'Mall Road, Mussoorie', animalsHelped: 180 },
-    { id: 4, name: 'Rishikesh Care Unit', coordinates: [30.0869, 78.2676], address: 'Laxman Jhula Road, Rishikesh', animalsHelped: 220 },
-    { id: 5, name: 'Haridwar Help Center', coordinates: [29.9457, 78.1642], address: 'Near Har Ki Pauri, Haridwar', animalsHelped: 165 }
-  ]);
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -132,9 +110,7 @@ export default function RescueMap() {
       try {
         const res = await fetch('/api/settings');
         const data = await res.json();
-        if (data.success && data.data.rescueLocations && data.data.rescueLocations.length > 0) {
-          setLocations(prepareLocations(data.data.rescueLocations));
-        }
+        if (data.success) setLocations(data.data.rescueLocations || []);
       } catch (error) {
         console.error('Error fetching settings:', error);
       } finally {
@@ -162,7 +138,7 @@ export default function RescueMap() {
             Rescue Locations
           </h2>
           <p className="text-lg text-[#401E01]/70 max-w-2xl mx-auto">
-            Based in Uttarkashi, Uttarakhand, we coordinate rescue support and feeding points across the region.
+            LAHIT locations added by the team are shown here.
           </p>
         </motion.div>
 
@@ -184,12 +160,16 @@ export default function RescueMap() {
             <div className="w-full h-full bg-[#F2CDAC] rounded-3xl flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-[#164020]" />
             </div>
-          ) : (
+          ) : locations.length > 0 ? (
             <MapComponent locations={locations} />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-base-200 p-6 text-center text-primary/60">
+              No rescue locations have been added yet.
+            </div>
           )}
 
           {/* Map Legend */}
-          {!loading && (
+          {!loading && locations.length > 0 && (
             <div className="absolute bottom-3 left-3 z-[400] max-w-[calc(100%-1.5rem)] rounded-xl bg-white p-3 shadow-lg sm:bottom-4 sm:left-4 sm:p-4">
               <h4 className="font-semibold text-[#401E01] mb-2 text-sm">Our Locations</h4>
               <div className="space-y-2">
@@ -210,7 +190,7 @@ export default function RescueMap() {
         </motion.div>
 
         {/* Location Cards */}
-        {!loading && (
+        {!loading && locations.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}

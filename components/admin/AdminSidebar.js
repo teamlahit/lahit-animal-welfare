@@ -79,7 +79,7 @@ export default function AdminSidebar({ open, onClose }) {
   return (
     <>
       {open && <button type="button" aria-label="Close navigation" onClick={onClose} className="fixed inset-0 z-40 bg-primary/55 backdrop-blur-sm lg:hidden" />}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-primary text-white transition-transform duration-300 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[min(280px,calc(100vw-1rem))] flex-col bg-primary text-white transition-transform duration-300 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex min-h-24 items-center justify-between border-b border-white/10 px-6">
           <Link href="/admin" onClick={onClose} className="flex items-center gap-3">
             <span className="relative h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-white">

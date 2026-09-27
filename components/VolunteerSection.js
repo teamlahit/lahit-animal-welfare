@@ -238,13 +238,13 @@ export default function VolunteerSection() {
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-primary">
+                <div className="mb-6 flex items-center justify-between gap-3">
+                  <h3 className="min-w-0 text-xl font-bold text-primary sm:text-2xl">
                     Volunteer Application
                   </h3>
                   <button
                     onClick={() => setIsFormOpen(false)}
-                    className="btn btn-ghost btn-circle btn-sm"
+                    className="btn btn-ghost btn-circle btn-sm shrink-0"
                   >
                     <X className="w-6 h-6" />
                   </button>

@@ -19,14 +19,14 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <ImpactStats />
-      <AdoptionSection />
       <RescueStories />
+      <RescueMap />
+      <DonationSection />
+      <AdoptionSection />
       <HelpCards />
       <EmergencyRescue />
       <InstagramFeed />
-      <DonationSection />
       <VolunteerSection />
-      <RescueMap />
       <Footer />
     </main></PublicSiteGate>
   );

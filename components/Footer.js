@@ -19,7 +19,7 @@ const quickLinks = [
   { name: 'Home', href: '/' },
   { name: 'About Us', href: '/#about' },
   { name: 'Uttarkashi Animal Rescue', href: '/uttarkashi/' },
-  { name: 'Rescue Stories', href: '/#rescues' },
+  { name: 'Rescue Stories', href: '/#stories' },
   { name: 'Adopt', href: '/animals' },
   { name: 'Field Notes', href: '/blog' },
   { name: 'Volunteer', href: '/#volunteer' },

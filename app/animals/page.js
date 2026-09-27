@@ -69,6 +69,11 @@ export default function AnimalsPage() {
         // Filter only available animals for public view
         const available = data.data.filter(a => a.status === 'available' || a.status === 'pending');
         setAnimals(available);
+        const requestedAnimal = new URLSearchParams(window.location.search).get('animal');
+        if (requestedAnimal) {
+          const match = available.find((animal) => animal._id === requestedAnimal || animal.name === requestedAnimal);
+          if (match) setSelectedAnimal(match);
+        }
       }
     } catch (error) {
       console.error('Error fetching animals:', error);
@@ -213,7 +218,7 @@ export default function AnimalsPage() {
             ) : (
               <>
                 <div className="flex items-start justify-between gap-4">
-                  <div><span className="text-xs font-black uppercase tracking-[0.12em] text-secondary">Adoption application</span><h2 className="mt-2 text-2xl font-black text-primary">Give {selectedAnimal.name} a home</h2></div>
+                  <div className="min-w-0"><span className="text-xs font-black uppercase tracking-[0.12em] text-secondary">Adoption application</span><h2 className="mt-2 break-words text-xl font-black text-primary sm:text-2xl">Give {selectedAnimal.name} a home</h2></div>
                   <button type="button" onClick={closeAdoptionForm} className="btn btn-ghost btn-circle btn-sm" aria-label="Close adoption form"><X className="h-5 w-5" /></button>
                 </div>
                 <form onSubmit={handleSubmit(submitAdoption)} className="mt-6 grid gap-4 sm:grid-cols-2">

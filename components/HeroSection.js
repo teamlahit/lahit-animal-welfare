@@ -135,8 +135,8 @@ export default function HeroSection() {
               <Button href="#emergency" variant="accent" size="lg" icon={Phone}>
                 <span className="sm:hidden">Report</span><span className="hidden sm:inline">Report a rescue</span>
               </Button>
-              <Button href="#donate" variant="outlineWhite" size="lg" icon={Heart}>
-                <span className="sm:hidden">Support</span><span className="hidden sm:inline">Give support</span>
+              <Button href="#donate" variant="accent" size="lg" icon={Heart}>
+                Donate now
               </Button>
             </div>
           </motion.div>

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Container from './ui/Container';
 import Card from './ui/Card';
 import Button from './ui/Button';
+import Link from 'next/link';
 
 export default function AdoptionSection() {
   const sectionRef = useRef(null);
@@ -63,6 +64,8 @@ export default function AdoptionSection() {
         ) : animals.length === 0 ? (
           <div className="py-20 text-center text-primary/60">
             No animals are available for adoption right now.
+            <p className="mx-auto mt-3 max-w-lg text-sm">You can still start an adoption enquiry and tell us what kind of companion you hope to welcome. We’ll let you know when a suitable animal is ready.</p>
+            <Button href="/#volunteer" variant="outline" size="md" className="mt-5" icon={ArrowRight}>Help an animal get ready for a home</Button>
           </div>
         ) : (
           <div className="mb-10 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
@@ -74,6 +77,7 @@ export default function AdoptionSection() {
                 transition={{ duration: 0.5, delay: index * 0.08 }}
                 className={animals.length === 1 ? 'w-full justify-self-start sm:max-w-[19rem]' : ''}
               >
+                <Link href={`/animals/?animal=${encodeURIComponent(animal._id || animal.name)}`} aria-label={`View ${animal.name}'s profile and adoption application`} className="block h-full rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
                 <Card hover={false} className="group h-full overflow-hidden" padding="none">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -123,8 +127,10 @@ export default function AdoptionSection() {
                         {animal.status === 'available' ? 'Ready for adoption' : 'Application in progress'}
                       </span>
                     </div>
+                    <span className="mt-3 inline-flex items-center gap-2 text-sm font-black text-secondary">View profile &amp; apply <ArrowRight className="h-4 w-4" /></span>
                   </div>
                 </Card>
+                </Link>
               </motion.div>
             ))}
           </div>

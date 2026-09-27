@@ -147,7 +147,7 @@ export default function ImpactStats() {
           initial={{ opacity: 0, y: 35 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-10 grid overflow-hidden rounded-[1.5rem] bg-primary text-white sm:mt-14 sm:rounded-[2rem] lg:grid-cols-[1.25fr_0.75fr]"
+          className="mt-10 grid overflow-hidden rounded-[1.5rem] bg-primary text-white sm:mt-14 sm:rounded-[2rem] lg:grid-cols-2"
         >
           <div className="p-6 sm:p-12 lg:p-16">
             <span className="eyebrow text-accent">Why LAHIT exists</span>
