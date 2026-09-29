@@ -32,6 +32,22 @@ const donationIconOptions = [
   { value: 'HeartHandshake', label: 'Support' },
 ];
 
+function normalizeSettings(data) {
+  return {
+    ...data,
+    donationTiers: data.donationTiers || [],
+    instagramPosts: (data.instagramPosts || []).map((post) => isInstagramUrl(post.image)
+      ? { ...post, postUrl: post.postUrl || post.image, image: '' }
+      : post),
+    rescueLocations: data.rescueLocations || [],
+    volunteerActivities: data.volunteerActivities || [],
+  };
+}
+
+function settingsSnapshot(value) {
+  return JSON.stringify(value);
+}
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
     siteName: '',
@@ -58,6 +74,9 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [activeTab, setActiveTab] = useState('site');
+  const [savedSnapshot, setSavedSnapshot] = useState('');
+
+  const isDirty = savedSnapshot !== '' && settingsSnapshot(settings) !== savedSnapshot;
 
   useEffect(() => {
     fetchSettings();
@@ -68,12 +87,9 @@ export default function AdminSettings() {
       const res = await fetch('/api/settings');
       const data = await res.json();
       if (data.success) {
-        setSettings({
-          ...data.data,
-          instagramPosts: (data.data.instagramPosts || []).map((post) => isInstagramUrl(post.image)
-            ? { ...post, postUrl: post.postUrl || post.image, image: '' }
-            : post),
-        });
+        const normalizedSettings = normalizeSettings(data.data);
+        setSettings(normalizedSettings);
+        setSavedSnapshot(settingsSnapshot(normalizedSettings));
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -82,8 +98,56 @@ export default function AdminSettings() {
     }
   }
 
+  useEffect(() => {
+    if (!isDirty) return undefined;
+
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    const handleInternalNavigation = (event) => {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+
+      const destination = new URL(link.href, window.location.href);
+      if (destination.origin !== window.location.origin || destination.pathname === window.location.pathname) return;
+      if (saving) {
+        event.preventDefault();
+        return;
+      }
+
+      const leave = window.confirm('You have unsaved settings. Leave without saving?');
+      if (!leave) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('click', handleInternalNavigation, true);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('click', handleInternalNavigation, true);
+    };
+  }, [isDirty, saving]);
+
   async function handleSubmit(e) {
     e.preventDefault();
+    const incompleteTier = (settings.donationTiers || []).find((tier) => (
+      !Number.isFinite(Number(tier.amount))
+      || Number(tier.amount) <= 0
+      || !tier.title?.trim()
+      || !tier.description?.trim()
+      || !tier.impact?.trim()
+    ));
+    if (incompleteTier) {
+      setActiveTab('donation');
+      setMessage({ type: 'error', text: 'Complete each donation tier’s amount, title, description, and impact before saving.' });
+      return;
+    }
     const incompletePost = (settings.instagramPosts || []).find((post) => !isLikelyImageSource(post.image));
     if (incompletePost) {
       setActiveTab('social');
@@ -105,6 +169,9 @@ export default function AdminSettings() {
       const data = await res.json();
       
       if (data.success) {
+        const normalizedSettings = normalizeSettings(data.data || settings);
+        setSettings(normalizedSettings);
+        setSavedSnapshot(settingsSnapshot(normalizedSettings));
         setMessage({ type: 'success', text: 'Settings saved successfully!' });
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to save settings.' });
@@ -126,7 +193,7 @@ export default function AdminSettings() {
 
   function handleDonationTierChange(index, field, value) {
     const newTiers = [...settings.donationTiers];
-    newTiers[index] = { ...newTiers[index], [field]: field === 'amount' ? parseInt(value) : value };
+    newTiers[index] = { ...newTiers[index], [field]: field === 'amount' ? (value === '' ? '' : Number(value)) : value };
     setSettings(prev => ({ ...prev, donationTiers: newTiers }));
   }
 
@@ -139,11 +206,11 @@ export default function AdminSettings() {
   function addDonationTier() {
     const newTier = {
       id: Date.now(),
-      amount: 1000,
-      title: 'New Tier',
-      description: 'Description',
+      amount: '',
+      title: '',
+      description: '',
       icon: 'Heart',
-      impact: 'Impact description'
+      impact: ''
     };
     setSettings(prev => ({ ...prev, donationTiers: [...prev.donationTiers, newTier] }));
   }
@@ -151,6 +218,12 @@ export default function AdminSettings() {
   function removeDonationTier(index) {
     const newTiers = settings.donationTiers.filter((_, i) => i !== index);
     setSettings(prev => ({ ...prev, donationTiers: newTiers }));
+  }
+
+  function discardChanges() {
+    if (!savedSnapshot) return;
+    setSettings(JSON.parse(savedSnapshot));
+    setMessage({ type: 'success', text: 'Unsaved changes were discarded.' });
   }
 
   function addInstagramPost() {
@@ -258,6 +331,16 @@ export default function AdminSettings() {
   return (
     <div>
       <h1 className="text-3xl font-bold text-primary mb-8">Settings</h1>
+
+      <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/10 bg-base-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-bold text-primary">Site settings</p>
+          <p className="mt-1 text-xs text-primary/55">Changes stay local until you save. Leaving this page will ask before discarding them.</p>
+        </div>
+        <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold ${isDirty ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+          {isDirty ? 'Unsaved changes' : 'All changes saved'}
+        </span>
+      </div>
       
       {message.text && (
         <div className={`alert mb-6 ${message.type === 'success' ? 'alert-success' : 'alert-error'}`}>
@@ -269,6 +352,7 @@ export default function AdminSettings() {
         {tabs.map(tab => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setActiveTab(tab.id)}
             className={`tab ${activeTab === tab.id ? 'tab-active' : ''}`}
           >
@@ -426,55 +510,53 @@ export default function AdminSettings() {
                 </div>
               </div>
 
-              <h2 className="text-xl font-bold text-primary mb-4">Donation Tiers</h2>
-              <p className="mb-4 text-sm text-primary/55">Choose an icon for each tier. Older or unknown icon names automatically use a public fallback.</p>
+              <div className="mb-5 rounded-2xl border border-primary/10 bg-primary/[0.03] p-4">
+                <h2 className="text-xl font-bold text-primary">Donation tiers</h2>
+                <p className="mt-1 text-sm leading-relaxed text-primary/60">These cards appear on the public donation section. Add a clear amount and message donors can understand at a glance.</p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-primary/60">
+                  <span><strong className="text-primary">Required:</strong> amount, title, description, impact</span>
+                  <span><strong className="text-primary">Optional:</strong> icon (Heart is used if unchanged)</span>
+                </div>
+              </div>
               <div className="space-y-4 mb-4">
                 {(settings.donationTiers || []).map((tier, index) => (
-                  <div key={tier.id || index} className="flex gap-4 items-start p-4 bg-base-200 rounded-xl">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input
-                        type="number"
-                        value={tier.amount}
-                        onChange={(e) => handleDonationTierChange(index, 'amount', e.target.value)}
-                        placeholder="Amount"
-                        className="input input-bordered"
-                      />
-                      <input
-                        type="text"
-                        value={tier.title}
-                        onChange={(e) => handleDonationTierChange(index, 'title', e.target.value)}
-                        placeholder="Title"
-                        className="input input-bordered"
-                      />
-                      <select
-                        value={tier.icon || 'HeartHandshake'}
-                        onChange={(e) => handleDonationTierChange(index, 'icon', e.target.value)}
-                        className="select select-bordered"
-                      >
-                        {donationIconOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                      </select>
-                      <input
-                        type="text"
-                        value={tier.description}
-                        onChange={(e) => handleDonationTierChange(index, 'description', e.target.value)}
-                        placeholder="Description"
-                        className="input input-bordered"
-                      />
-                      <input
-                        type="text"
-                        value={tier.impact}
-                        onChange={(e) => handleDonationTierChange(index, 'impact', e.target.value)}
-                        placeholder="Impact"
-                        className="input input-bordered"
-                      />
+                  <div key={tier.id || index} className="rounded-2xl border border-primary/10 bg-base-200 p-4 sm:p-5">
+                    <div className="mb-4 flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-[0.14em] text-secondary">Tier {index + 1}</p>
+                        <h3 className="mt-1 text-lg font-bold text-primary">{tier.title || 'Untitled donation tier'}</h3>
+                      </div>
+                      <button type="button" onClick={() => removeDonationTier(index)} className="btn btn-sm btn-error">Remove</button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeDonationTier(index)}
-                      className="btn btn-sm btn-error"
-                    >
-                      Remove
-                    </button>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <label className="form-control">
+                        <span className="mb-1.5 text-sm font-bold text-primary">Amount <span className="text-error">*</span></span>
+                        <input type="number" min="1" value={tier.amount} onChange={(e) => handleDonationTierChange(index, 'amount', e.target.value)} placeholder="Example: 500" className="input input-bordered w-full" required />
+                        <span className="mt-1 text-xs text-primary/45">Use whole Indian rupees.</span>
+                      </label>
+                      <label className="form-control">
+                        <span className="mb-1.5 text-sm font-bold text-primary">Tier title <span className="text-error">*</span></span>
+                        <input type="text" value={tier.title || ''} onChange={(e) => handleDonationTierChange(index, 'title', e.target.value)} placeholder="Example: Food & Care" className="input input-bordered w-full" required />
+                        <span className="mt-1 text-xs text-primary/45">Short name shown above the description.</span>
+                      </label>
+                      <label className="form-control">
+                        <span className="mb-1.5 text-sm font-bold text-primary">Icon <span className="font-normal text-primary/45">(optional)</span></span>
+                        <select value={tier.icon || 'Heart'} onChange={(e) => handleDonationTierChange(index, 'icon', e.target.value)} className="select select-bordered w-full">
+                          {donationIconOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                        </select>
+                        <span className="mt-1 text-xs text-primary/45">Visual cue for the public card.</span>
+                      </label>
+                      <label className="form-control">
+                        <span className="mb-1.5 text-sm font-bold text-primary">Short description <span className="text-error">*</span></span>
+                        <input type="text" value={tier.description || ''} onChange={(e) => handleDonationTierChange(index, 'description', e.target.value)} placeholder="Example: Provides food and clean water" className="input input-bordered w-full" required />
+                        <span className="mt-1 text-xs text-primary/45">Explain what this donation supports.</span>
+                      </label>
+                      <label className="form-control md:col-span-2">
+                        <span className="mb-1.5 text-sm font-bold text-primary">Impact statement <span className="text-error">*</span></span>
+                        <input type="text" value={tier.impact || ''} onChange={(e) => handleDonationTierChange(index, 'impact', e.target.value)} placeholder="Example: Supports daily care for rescued animals" className="input input-bordered w-full" required />
+                        <span className="mt-1 text-xs text-primary/45">The result donors should associate with this amount.</span>
+                      </label>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -626,12 +708,18 @@ export default function AdminSettings() {
           )}
           
           <div className="mt-8">
+            {isDirty && (
+              <button type="button" onClick={discardChanges} className="mr-3 rounded-full px-5 py-3 text-sm font-bold text-primary/65 hover:bg-primary/5">
+                Discard changes
+              </button>
+            )}
             <Button
               type="submit"
               variant="primary"
               loading={saving}
+              disabled={!isDirty}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'Saving...' : isDirty ? 'Save Changes' : 'All Changes Saved'}
             </Button>
           </div>
         </div>
