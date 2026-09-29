@@ -8,6 +8,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getClientJson } from '@/lib/client-fetch';
 
 function RescueCard({ story, index, featured = false }) {
   const isFeatured = featured;
@@ -111,8 +112,7 @@ export default function RescueStories() {
   useEffect(() => {
     async function fetchRescues() {
       try {
-        const res = await fetch('/api/rescues');
-        const data = await res.json();
+        const data = await getClientJson('/api/rescues');
         if (data.success) {
           setRescues(data.data.slice(0, 2));
         } else {
@@ -126,7 +126,7 @@ export default function RescueStories() {
       }
     }
     fetchRescues();
-    fetch('/api/blogs').then((res) => res.json()).then((data) => {
+    getClientJson('/api/blogs').then((data) => {
       if (data.success) setPosts(data.data.slice(0, 2));
     }).catch((err) => console.error('Error loading story updates:', err));
   }, []);

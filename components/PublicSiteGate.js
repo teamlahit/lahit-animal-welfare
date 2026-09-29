@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Mail, Phone, Wrench } from 'lucide-react';
+import { getClientJson } from '@/lib/client-fetch';
 
 export default function PublicSiteGate({ children }) {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
-    fetch('/api/settings', { cache: 'no-store' })
-      .then((response) => response.json())
+    getClientJson('/api/settings')
       .then((data) => { if (data.success) setSettings(data.data); })
       .catch(() => {});
   }, []);

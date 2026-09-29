@@ -5,6 +5,7 @@ import { motion, useInView } from 'framer-motion';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
 import Container from './ui/Container';
 import dynamic from 'next/dynamic';
+import { getClientJson } from '@/lib/client-fetch';
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -108,8 +109,7 @@ export default function RescueMap() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
+        const data = await getClientJson('/api/settings');
         if (data.success) setLocations(data.data.rescueLocations || []);
       } catch (error) {
         console.error('Error fetching settings:', error);

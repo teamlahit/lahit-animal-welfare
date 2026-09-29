@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowUpRight, BookOpen, Loader2 } from 'lucide-react';
 import Container from '@/components/ui/Container';
 import Button from '@/components/ui/Button';
+import { getClientJson } from '@/lib/client-fetch';
 
 export default function BlogHighlights() {
   const [allPosts, setAllPosts] = useState([]);
@@ -15,8 +16,7 @@ export default function BlogHighlights() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetch('/api/blogs');
-        const data = await res.json();
+        const data = await getClientJson('/api/blogs');
         if (data.success) {
           setAllPosts(data.data);
         }

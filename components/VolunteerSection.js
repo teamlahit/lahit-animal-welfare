@@ -7,6 +7,7 @@ import Container from './ui/Container';
 import Button from './ui/Button';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
+import { getClientJson } from '@/lib/client-fetch';
 
 export default function VolunteerSection() {
   const sectionRef = useRef(null);
@@ -33,8 +34,7 @@ export default function VolunteerSection() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
+        const data = await getClientJson('/api/settings');
         if (data.success) {
           if (data.data.volunteerActivities && data.data.volunteerActivities.length > 0) {
             setActivities(data.data.volunteerActivities);
@@ -47,8 +47,7 @@ export default function VolunteerSection() {
       }
     }
     fetchSettings();
-    fetch('/api/media/homepage')
-      .then((res) => res.json())
+    getClientJson('/api/media/homepage')
       .then((data) => {
         if (data.success && data.data.volunteer) {
           setVolunteerImage({
@@ -58,8 +57,7 @@ export default function VolunteerSection() {
         }
       })
       .catch(() => {});
-    fetch('/api/stats')
-      .then((res) => res.json())
+    getClientJson('/api/stats')
       .then((data) => { if (data.success) setVolunteerCount(data.data.volunteers || 0); })
       .catch(() => {});
   }, []);

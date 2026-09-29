@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Heart, Home, Stethoscope, Utensils } from 'lucide-react';
 import Container from './ui/Container';
+import { getClientJson } from '@/lib/client-fetch';
 
 const iconMap = { Heart, Utensils, Stethoscope, Home };
 const marqueeLabels = ['Rescue', 'Recover', 'Rehome', 'Repeat',];
@@ -49,9 +50,8 @@ export default function ImpactStats() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch('/api/stats');
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Unable to load statistics');
+        const data = await getClientJson('/api/stats');
+        if (!data.success) throw new Error(data.error || 'Unable to load statistics');
         setStats(data.data);
       } catch (error) {
         console.error('Error fetching stats:', error);

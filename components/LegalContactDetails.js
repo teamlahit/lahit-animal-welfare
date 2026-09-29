@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getClientJson } from '@/lib/client-fetch';
 
 const fallback = {
   contactEmail: 'contact@lahit.org',
@@ -12,8 +13,7 @@ export default function LegalContactDetails({ variant = 'privacy' }) {
   const [settings, setSettings] = useState(fallback);
 
   useEffect(() => {
-    fetch('/api/settings', { cache: 'no-store' })
-      .then((response) => response.json())
+    getClientJson('/api/settings')
       .then((data) => {
         if (data.success) {
           setSettings({ ...fallback, ...data.data });

@@ -16,6 +16,7 @@ import {
   Building2,
   Loader2
 } from 'lucide-react';
+import { getClientJson } from '@/lib/client-fetch';
 import Container from './ui/Container';
 import Card from './ui/Card';
 import Button from './ui/Button';
@@ -53,8 +54,7 @@ export default function DonationSection() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
+        const data = await getClientJson('/api/settings');
         if (data.success) {
           setSettings(data.data);
         }

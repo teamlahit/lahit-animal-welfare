@@ -7,6 +7,7 @@ import Container from './ui/Container';
 import Button from './ui/Button';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
+import { getClientJson } from '@/lib/client-fetch';
 
 export default function EmergencyRescue() {
   const sectionRef = useRef(null);
@@ -21,8 +22,7 @@ export default function EmergencyRescue() {
   const [imageError, setImageError] = useState('');
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
+    getClientJson('/api/settings')
       .then((data) => {
         if (data.success && data.data.contactPhone) setContactPhone(data.data.contactPhone);
       })
@@ -30,8 +30,7 @@ export default function EmergencyRescue() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/stats')
-      .then((res) => res.json())
+    getClientJson('/api/stats')
       .then((data) => {
         if (data.success) setVolunteerCount(Number(data.data.volunteers) || 0);
       })

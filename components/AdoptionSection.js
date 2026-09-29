@@ -8,6 +8,7 @@ import Container from './ui/Container';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import Link from 'next/link';
+import { getClientJson } from '@/lib/client-fetch';
 
 export default function AdoptionSection() {
   const sectionRef = useRef(null);
@@ -18,8 +19,7 @@ export default function AdoptionSection() {
   useEffect(() => {
     async function fetchAnimals() {
       try {
-        const res = await fetch('/api/animals', { cache: 'no-store' });
-        const data = await res.json();
+        const data = await getClientJson('/api/animals');
 
         if (data.success) {
           const availableAnimals = (data.data || []).filter(

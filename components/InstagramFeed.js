@@ -5,6 +5,7 @@ import { motion, useInView } from 'framer-motion';
 import { Instagram, ExternalLink, Loader2 } from 'lucide-react';
 import Container from './ui/Container';
 import Image from 'next/image';
+import { getClientJson } from '@/lib/client-fetch';
 
 function isLikelyImageSource(value = '') {
   if (value.startsWith('data:image/')) return true;
@@ -63,8 +64,7 @@ export default function InstagramFeed() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
+        const data = await getClientJson('/api/settings');
         if (data.success && data.data.instagram) setInstagramUrl(data.data.instagram);
         if (data.success && data.data.instagramPosts && data.data.instagramPosts.length > 0) {
           setInstagramPosts(data.data.instagramPosts);

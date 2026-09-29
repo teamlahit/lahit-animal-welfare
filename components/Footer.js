@@ -12,6 +12,7 @@ import {
   ArrowUp,
 } from 'lucide-react';
 import Container from './ui/Container';
+import { getClientJson } from '@/lib/client-fetch';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -39,8 +40,7 @@ export default function Footer() {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
+    getClientJson('/api/settings')
       .then((data) => { if (data.success) setSettings(data.data); })
       .catch(() => {});
   }, []);
