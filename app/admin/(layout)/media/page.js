@@ -6,6 +6,19 @@ import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import { uploadImage } from '@/lib/upload-image';
 
+const builtInMedia = [
+  { filename: 'rescue-hero-v2.webp', url: '/images/rescue-hero-v2.webp', category: 'hero', alt: 'A LAHIT volunteer caring for a rescued dog in Uttarakhand' },
+  { filename: 'rescue-hero-v3.webp', url: '/images/rescue-hero-v3.webp', category: 'hero', alt: 'Volunteers caring for rescued dogs in Uttarakhand' },
+  { filename: 'rescue-hero-v5.webp', url: '/images/rescue-hero-v5.webp', category: 'hero', alt: 'A veterinarian examining a rescued dog during a clinic check-up' },
+  { filename: 'rescue-hero-v6.webp', url: '/images/rescue-hero-v6.webp', category: 'hero', alt: 'Veterinary staff providing medical treatment to a rescued animal' },
+  { filename: 'hero-dog.jpg', url: '/images/hero-dog.jpg', category: 'general', alt: 'LAHIT rescue dog' },
+  { filename: 'lahit.png', url: '/lahit.png', category: 'general', alt: 'LAHIT logo' },
+  ...['choti', 'gauri', 'golu', 'kalu', 'monal'].flatMap((name) => [
+    { filename: `${name}-before.png`, url: `/images/rescues/${name}-before.png`, category: 'rescue', alt: `${name} before rescue` },
+    { filename: `${name}-after.png`, url: `/images/rescues/${name}-after.png`, category: 'rescue', alt: `${name} after rescue` },
+  ]),
+].map((item) => ({ ...item, _id: `built-in:${item.url}`, type: 'image', isBuiltIn: true }));
+
 export default function AdminMedia() {
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +170,8 @@ export default function AdminMedia() {
     });
   }
 
-  const filteredMedia = media.filter(item => {
+  const allMedia = [...media, ...builtInMedia];
+  const filteredMedia = allMedia.filter(item => {
     const matchesSearch = item.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           (item.caption || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !filterCategory || item.category === filterCategory;
@@ -183,6 +197,10 @@ export default function AdminMedia() {
         >
           + Add Media
         </Button>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-primary/10 bg-base-100 px-5 py-4 text-sm text-primary/65">
+        <strong className="text-primary">Site assets are included below.</strong> Built-in images are read-only because they are part of the website files. Uploaded media can be edited or removed.
       </div>
 
       {message.text && (
@@ -321,16 +339,18 @@ export default function AdminMedia() {
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
             >
-              <option value="">All Categories</option>
+                  <option value="">All Categories</option>
                   <option value="hero">Hero carousel</option>
                   <option value="volunteer">Volunteer section</option>
+                  <option value="rescue">Rescue stories</option>
+                  <option value="general">General site assets</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMedia.length === 0 ? (
               <div className="col-span-full text-center text-primary/60 py-12">
-                No media found. Add your first media item!
+                No media found in this category.
               </div>
             ) : (
               filteredMedia.map((item) => (
@@ -343,28 +363,32 @@ export default function AdminMedia() {
                         <ImageIcon className="w-12 h-12 text-primary/40" />
                       </div>
                     )}
-                    <div className="absolute top-2 right-2 badge badge-primary badge-sm">
-                      {item.type}
+                    <div className={`absolute top-2 right-2 badge badge-sm ${item.isBuiltIn ? 'badge-neutral' : 'badge-primary'}`}>
+                      {item.isBuiltIn ? 'Site asset' : item.type}
                     </div>
                   </div>
                   <div className="card-body p-4">
                     <p className="text-sm font-medium text-primary truncate">{item.filename}</p>
                     <p className="text-xs text-primary/60 capitalize">{item.category}</p>
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => editMedia(item)}
-                        className="btn btn-xs btn-ghost flex-1 text-primary"
-                      >
-                        <Edit className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        disabled={deletingId === item._id}
-                        className="btn btn-xs btn-ghost text-error"
-                      >
-                        {deletingId === item._id ? '...' : <Trash2 className="w-3 h-3" />}
-                      </button>
-                    </div>
+                    {item.isBuiltIn ? (
+                      <p className="mt-3 text-xs font-semibold text-primary/45">Built into the website</p>
+                    ) : (
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => editMedia(item)}
+                          className="btn btn-xs btn-ghost flex-1 text-primary"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item._id)}
+                          disabled={deletingId === item._id}
+                          className="btn btn-xs btn-ghost text-error"
+                        >
+                          {deletingId === item._id ? '...' : <Trash2 className="w-3 h-3" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
