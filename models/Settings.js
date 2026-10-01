@@ -24,6 +24,9 @@ const SettingsSchema = new mongoose.Schema({
   
   // Instagram posts
   instagramPosts: { type: Array, default: []},
+
+  // Homepage hero carousel images (undefined keeps the original site defaults)
+  heroImages: { type: Array, default: undefined },
   
   // Rescue locations
   rescueLocations: { type: Array, default: [] },

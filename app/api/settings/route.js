@@ -72,6 +72,21 @@ export async function PUT(request) {
         };
       }));
     }
+    if (Array.isArray(body.heroImages)) {
+      if (body.heroImages.length > 8) {
+        return NextResponse.json({ success: false, error: 'The homepage carousel supports up to 8 images.' }, { status: 400 });
+      }
+      if (body.heroImages.some((image) => (
+        !image || typeof image.url !== 'string'
+        || !((image.url.startsWith('/') && !image.url.startsWith('//')) || /^https:\/\/res\.cloudinary\.com\//.test(image.url))
+      ))) {
+        return NextResponse.json({ success: false, error: 'Each hero image must be a site asset or an uploaded image.' }, { status: 400 });
+      }
+      body.heroImages = body.heroImages.map((image) => ({
+        url: image.url,
+        alt: String(image.alt || '').trim().slice(0, 300),
+      }));
+    }
     body.updatedAt = new Date();
     
     let settings = await Settings.findOne();

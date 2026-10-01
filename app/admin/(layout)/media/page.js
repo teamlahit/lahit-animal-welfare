@@ -13,10 +13,6 @@ const builtInMedia = [
   { filename: 'rescue-hero-v6.webp', url: '/images/rescue-hero-v6.webp', category: 'hero', alt: 'Veterinary staff providing medical treatment to a rescued animal' },
   { filename: 'hero-dog.jpg', url: '/images/hero-dog.jpg', category: 'general', alt: 'LAHIT rescue dog' },
   { filename: 'lahit.png', url: '/lahit.png', category: 'general', alt: 'LAHIT logo' },
-  ...['choti', 'gauri', 'golu', 'kalu', 'monal'].flatMap((name) => [
-    { filename: `${name}-before.png`, url: `/images/rescues/${name}-before.png`, category: 'rescue', alt: `${name} before rescue` },
-    { filename: `${name}-after.png`, url: `/images/rescues/${name}-after.png`, category: 'rescue', alt: `${name} after rescue` },
-  ]),
 ].map((item) => ({ ...item, _id: `built-in:${item.url}`, type: 'image', isBuiltIn: true }));
 
 export default function AdminMedia() {
@@ -173,7 +169,8 @@ export default function AdminMedia() {
   const allMedia = [...media, ...builtInMedia];
   const filteredMedia = allMedia.filter(item => {
     const matchesSearch = item.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (item.caption || '').toLowerCase().includes(searchQuery.toLowerCase());
+                          (item.caption || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (item.alt || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !filterCategory || item.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
@@ -189,7 +186,10 @@ export default function AdminMedia() {
   return (
     <div>
       <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="text-3xl font-bold text-primary">Media Library</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Media Library</h1>
+          <p className="mt-1 text-sm text-primary/60">Browse images used across the site. Manage homepage carousel slides in Settings → Homepage Hero.</p>
+        </div>
         <Button 
           onClick={() => { resetForm(); setShowForm(true); }}
           variant="primary"
@@ -200,7 +200,7 @@ export default function AdminMedia() {
       </div>
 
       <div className="mb-6 rounded-2xl border border-primary/10 bg-base-100 px-5 py-4 text-sm text-primary/65">
-        <strong className="text-primary">Site assets are included below.</strong> Built-in images are read-only because they are part of the website files. Uploaded media can be edited or removed.
+        <strong className="text-primary">Two image types appear here.</strong> “Site file” images are built into the website and can’t be edited here. “Uploaded image” files can be edited or deleted. Removing an image from the homepage carousel does not delete the file.
       </div>
 
       {message.text && (
@@ -242,9 +242,13 @@ export default function AdminMedia() {
                   onChange={handleChange}
                   className="select select-bordered w-full"
                 >
-                  {formData.category === 'unused' && <option value="unused" disabled>Not used on homepage</option>}
-                  <option value="hero">Hero carousel</option>
+                  <option value="hero">Homepage hero carousel</option>
                   <option value="volunteer">Volunteer section</option>
+                  <option value="rescue">Rescue stories</option>
+                  <option value="animal">Animal profiles</option>
+                  <option value="event">Events</option>
+                  <option value="general">General site image</option>
+                  <option value="blog">Blog</option>
                 </select>
               </div>
                 
@@ -327,7 +331,7 @@ export default function AdminMedia() {
                 <Search className="w-4 h-4 text-primary/60" />
                 <input
                   type="text"
-                  placeholder="Search media..."
+                  placeholder="Search filename, description, or alt text…"
                   className="grow"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -340,10 +344,13 @@ export default function AdminMedia() {
               onChange={(e) => setFilterCategory(e.target.value)}
             >
                   <option value="">All Categories</option>
-                  <option value="hero">Hero carousel</option>
+                  <option value="hero">Homepage hero</option>
                   <option value="volunteer">Volunteer section</option>
                   <option value="rescue">Rescue stories</option>
-                  <option value="general">General site assets</option>
+                  <option value="animal">Animal profiles</option>
+                  <option value="event">Events</option>
+                  <option value="general">General site images</option>
+                  <option value="blog">Blog</option>
             </select>
           </div>
 
@@ -364,12 +371,12 @@ export default function AdminMedia() {
                       </div>
                     )}
                     <div className={`absolute top-2 right-2 badge badge-sm ${item.isBuiltIn ? 'badge-neutral' : 'badge-primary'}`}>
-                      {item.isBuiltIn ? 'Site asset' : item.type}
+                      {item.isBuiltIn ? 'Site file' : 'Uploaded image'}
                     </div>
                   </div>
                   <div className="card-body p-4">
                     <p className="text-sm font-medium text-primary truncate">{item.filename}</p>
-                    <p className="text-xs text-primary/60 capitalize">{item.category}</p>
+                    <p className="text-xs text-primary/60">{({ hero: 'Homepage hero', volunteer: 'Volunteer section', rescue: 'Rescue stories', animal: 'Animal profiles', event: 'Events', general: 'General site image', blog: 'Blog' })[item.category] || 'General site image'}</p>
                     {item.isBuiltIn ? (
                       <p className="mt-3 text-xs font-semibold text-primary/45">Built into the website</p>
                     ) : (
@@ -377,15 +384,20 @@ export default function AdminMedia() {
                         <button
                           onClick={() => editMedia(item)}
                           className="btn btn-xs btn-ghost flex-1 text-primary"
+                          aria-label={`Edit ${item.filename}`}
+                          title="Edit image details"
                         >
                           <Edit className="w-3 h-3" />
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => handleDelete(item._id)}
                           disabled={deletingId === item._id}
                           className="btn btn-xs btn-ghost text-error"
+                          aria-label={`Delete ${item.filename}`}
+                          title="Delete uploaded image"
                         >
-                          {deletingId === item._id ? '...' : <Trash2 className="w-3 h-3" />}
+                          {deletingId === item._id ? '...' : <><Trash2 className="w-3 h-3" /><span>Delete</span></>}
                         </button>
                       </div>
                     )}

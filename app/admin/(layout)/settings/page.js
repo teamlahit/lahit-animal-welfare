@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
+import { uploadImage } from '@/lib/upload-image';
+
+const defaultHeroImages = [
+  { url: '/images/rescue-hero-v2.webp', alt: 'A LAHIT volunteer caring for a rescued dog in Uttarakhand', label: 'Rescue care' },
+  { url: '/images/rescue-hero-v3.webp', alt: 'Volunteers caring for rescued dogs in Uttarakhand', label: 'Volunteer care' },
+  { url: '/images/rescue-hero-v5.webp', alt: 'A veterinarian examining a rescued dog during a clinic check-up', label: 'Veterinary check-up' },
+  { url: '/images/rescue-hero-v6.webp', alt: 'Veterinary staff providing medical treatment to a rescued animal', label: 'Animal treatment' },
+];
 
 function isInstagramUrl(value = '') {
   try {
@@ -32,9 +40,10 @@ const donationIconOptions = [
   { value: 'HeartHandshake', label: 'Support' },
 ];
 
-function normalizeSettings(data) {
+function normalizeSettings(data, currentHeroImages = defaultHeroImages) {
   return {
     ...data,
+    heroImages: Array.isArray(data.heroImages) ? data.heroImages : currentHeroImages.map(({ url, alt }) => ({ url, alt })),
     donationTiers: data.donationTiers || [],
     instagramPosts: (data.instagramPosts || []).map((post) => isInstagramUrl(post.image)
       ? { ...post, postUrl: post.postUrl || post.image, image: '' }
@@ -68,18 +77,25 @@ export default function AdminSettings() {
     donationTiers: [],
     instagramPosts: [],
     rescueLocations: [],
-    volunteerActivities: []
+    volunteerActivities: [],
+    heroImages: defaultHeroImages.map(({ url, alt }) => ({ url, alt }))
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [activeTab, setActiveTab] = useState('site');
   const [savedSnapshot, setSavedSnapshot] = useState('');
+  const [mediaOptions, setMediaOptions] = useState([]);
+  const [selectedHeroAsset, setSelectedHeroAsset] = useState('');
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
 
   const isDirty = savedSnapshot !== '' && settingsSnapshot(settings) !== savedSnapshot;
 
   useEffect(() => {
     fetchSettings();
+    fetch('/api/media').then((res) => res.json()).then((data) => {
+      if (data.success) setMediaOptions(data.data.filter((item) => item.type === 'image'));
+    }).catch(() => {});
   }, []);
 
   async function fetchSettings() {
@@ -87,7 +103,13 @@ export default function AdminSettings() {
       const res = await fetch('/api/settings');
       const data = await res.json();
       if (data.success) {
-        const normalizedSettings = normalizeSettings(data.data);
+        let currentHeroImages = defaultHeroImages;
+        try {
+          const homepageResponse = await fetch('/api/media/homepage');
+          const homepageData = await homepageResponse.json();
+          if (homepageData.success && homepageData.data.hero.length > 0) currentHeroImages = homepageData.data.hero;
+        } catch {}
+        const normalizedSettings = normalizeSettings(data.data, currentHeroImages);
         setSettings(normalizedSettings);
         setSavedSnapshot(settingsSnapshot(normalizedSettings));
       }
@@ -220,6 +242,58 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, donationTiers: newTiers }));
   }
 
+  function addHeroImage(url, alt = '') {
+    if (!url || settings.heroImages.some((image) => image.url === url)) return;
+    if (settings.heroImages.length >= 8) {
+      setMessage({ type: 'error', text: 'The homepage carousel supports up to 8 images.' });
+      return;
+    }
+    setSettings((current) => ({ ...current, heroImages: [...current.heroImages, { url, alt }] }));
+  }
+
+  function removeHeroImage(index) {
+    setSettings((current) => ({ ...current, heroImages: current.heroImages.filter((_, itemIndex) => itemIndex !== index) }));
+  }
+
+  function moveHeroImage(index, offset) {
+    const next = [...settings.heroImages];
+    const target = index + offset;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    setSettings((current) => ({ ...current, heroImages: next }));
+  }
+
+  async function handleHeroImageUpload(file) {
+    if (!file) return;
+    if (settings.heroImages.length >= 8) {
+      setMessage({ type: 'error', text: 'The homepage carousel supports up to 8 images.' });
+      return;
+    }
+    if (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Choose an image smaller than 8 MB.' });
+      return;
+    }
+    setUploadingHeroImage(true);
+    try {
+      const uploaded = await uploadImage(file);
+      const alt = file.name.replace(/\.[^.]+$/, '');
+      const response = await fetch('/api/media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, url: uploaded.url, type: 'image', category: 'hero', alt, caption: '', uploadedBy: 'Admin' }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Image uploaded but could not be added to the media library.');
+      setMediaOptions((current) => [...current, result.data]);
+      addHeroImage(uploaded.url, alt);
+      setMessage({ type: 'success', text: 'Image uploaded and added to the carousel. Save changes to publish it.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Image upload failed.' });
+    } finally {
+      setUploadingHeroImage(false);
+    }
+  }
+
   function discardChanges() {
     if (!savedSnapshot) return;
     setSettings(JSON.parse(savedSnapshot));
@@ -323,6 +397,7 @@ export default function AdminSettings() {
 
   const tabs = [
     { id: 'site', label: 'Site Info' },
+    { id: 'hero', label: 'Homepage Hero' },
     { id: 'donation', label: 'Bank & Payments' },
     { id: 'social', label: 'Social Media' },
     { id: 'programs', label: 'Programs & Locations' }
@@ -363,7 +438,7 @@ export default function AdminSettings() {
       
       <form onSubmit={handleSubmit} className="card bg-base-100 shadow-sm">
         <div className="card-body">
-          {activeTab === 'site' && (
+        {activeTab === 'site' && (
             <div>
               <h2 className="text-xl font-bold text-primary mb-4">Site Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -435,6 +510,55 @@ export default function AdminSettings() {
                   </label>
                 </div>
               </div>
+            </div>
+        )}
+
+          {activeTab === 'hero' && (
+            <div>
+              <h2 className="text-xl font-bold text-primary mb-2">Homepage hero carousel</h2>
+              <p className="mb-5 text-sm text-primary/60">Choose the images shown behind the homepage headline. The order below is the display order. Changes go live after you save.</p>
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+                <select value={selectedHeroAsset} onChange={(event) => setSelectedHeroAsset(event.target.value)} className="select select-bordered w-full sm:max-w-lg">
+                  <option value="">Choose an image from the media library</option>
+                  {[...defaultHeroImages.map((image) => ({ ...image, label: image.label })), ...mediaOptions.map((image) => ({ ...image, label: image.filename }))].map((image) => (
+                    <option key={image.url} value={image.url} disabled={settings.heroImages.some((selected) => selected.url === image.url)}>
+                      {image.label}{settings.heroImages.some((selected) => selected.url === image.url) ? ' (already added)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="btn btn-outline" disabled={!selectedHeroAsset || settings.heroImages.length >= 8} onClick={() => {
+                  const image = [...defaultHeroImages, ...mediaOptions].find((item) => item.url === selectedHeroAsset);
+                  if (image) addHeroImage(image.url, image.alt || image.filename || 'LAHIT animal rescue');
+                  setSelectedHeroAsset('');
+                }}>Add selected image</button>
+                <label className={`btn btn-primary ${uploadingHeroImage || settings.heroImages.length >= 8 ? 'btn-disabled' : ''}`}>
+                  {uploadingHeroImage ? 'Uploading…' : 'Upload new image'}
+                  <input type="file" accept="image/*" className="sr-only" disabled={uploadingHeroImage || settings.heroImages.length >= 8} onChange={(event) => handleHeroImageUpload(event.target.files?.[0])} />
+                </label>
+              </div>
+              {settings.heroImages.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-base-300 p-8 text-center text-sm text-primary/60">No images selected. Add an image to show a background behind the homepage headline.</div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {settings.heroImages.map((image, index) => (
+                    <div key={`${image.url}-${index}`} className="overflow-hidden rounded-xl border border-base-300 bg-base-100">
+                      <div className="relative h-40 bg-base-200">
+                        <Image src={image.url} alt={image.alt || `Homepage hero image ${index + 1}`} fill unoptimized className="object-cover" />
+                        <span className="badge badge-primary absolute left-3 top-3">Slide {index + 1}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 p-3">
+                        <span className="truncate text-xs text-primary/55">{image.alt || image.url.split('/').pop()}</span>
+                        <div className="flex shrink-0 gap-1">
+                          <button type="button" className="btn btn-xs btn-ghost" aria-label={`Move slide ${index + 1} earlier`} disabled={index === 0} onClick={() => moveHeroImage(index, -1)}>↑</button>
+                          <button type="button" className="btn btn-xs btn-ghost" aria-label={`Move slide ${index + 1} later`} disabled={index === settings.heroImages.length - 1} onClick={() => moveHeroImage(index, 1)}>↓</button>
+                          <button type="button" className="btn btn-xs btn-error" onClick={() => removeHeroImage(index)}>Remove</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="mt-4 text-xs text-primary/50">Up to 8 images. Uploads are added to the media library and carousel; removing a slide does not delete its image file.</p>
             </div>
           )}
 

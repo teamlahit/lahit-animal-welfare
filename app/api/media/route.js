@@ -22,11 +22,9 @@ export async function GET(request) {
     const media = await Media.find(query).sort({ createdAt: -1 }).lean();
     const normalizedMedia = media.map((item) => ({
       ...item,
-      category: ['hero', 'volunteer'].includes(item.category)
+      category: ['hero', 'volunteer', 'rescue', 'animal', 'event', 'general', 'blog'].includes(item.category)
         ? item.category
-        : /volunteer/i.test(item.filename)
-          ? 'volunteer'
-          : 'unused',
+        : /volunteer/i.test(item.filename) ? 'volunteer' : 'general',
     }));
     const filteredMedia = category
       ? normalizedMedia.filter((item) => item.category === category)

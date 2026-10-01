@@ -7,7 +7,8 @@ import User from '@/models/User';
 import { requireAdmin, unauthorizedResponse } from '@/lib/admin-api';
 import { apiErrorResponse } from '@/lib/api-error';
 import { sendMail, isMailConfigured } from '@/lib/mailer';
-import { createResetToken, getAppUrl } from '@/lib/password-reset';
+import { createResetToken } from '@/lib/password-reset';
+import { SITE_URL } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,10 +43,10 @@ export async function PUT(request, { params }) {
   }
 }
 
-async function sendVolunteerInvite(volunteer, request) {
+async function sendVolunteerInvite(volunteer) {
   const recipient = volunteer.email.trim().toLowerCase();
   const { token } = await createResetToken({ email: recipient, purpose: 'invite' });
-  const appUrl = getAppUrl(request);
+  const appUrl = SITE_URL;
   const setNewPasswordLink = `${appUrl}/candidate/reset?token=${token}`;
   const loginLink = `${appUrl}/candidate/login/`;
   const name = volunteer.name?.trim() || 'volunteer';
@@ -99,7 +100,7 @@ export async function PATCH(request, { params }) {
         await user.save();
       }
 
-      const { setNewPasswordLink, mailSent, mailError } = await sendVolunteerInvite(volunteer, request);
+      const { setNewPasswordLink, mailSent, mailError } = await sendVolunteerInvite(volunteer);
 
       if (mailError && process.env.NODE_ENV === 'production') {
         return NextResponse.json({ success: false, error: 'The volunteer was not notified because email delivery failed.' }, { status: 502 });
@@ -132,7 +133,7 @@ export async function PATCH(request, { params }) {
         return NextResponse.json({ success: false, error: 'This volunteer has not been approved yet.' }, { status: 409 });
       }
 
-      const { setNewPasswordLink, mailSent, mailError } = await sendVolunteerInvite(volunteer, request);
+      const { setNewPasswordLink, mailSent, mailError } = await sendVolunteerInvite(volunteer);
       if (mailError && process.env.NODE_ENV === 'production') {
         return NextResponse.json({ success: false, error: 'Could not re-send the invitation email.' }, { status: 502 });
       }

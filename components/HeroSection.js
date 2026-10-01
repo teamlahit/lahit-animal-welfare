@@ -39,7 +39,13 @@ export default function HeroSection() {
 
     getClientJson('/api/media/homepage')
       .then((data) => {
-        if (data.success && data.data.hero.length > 0) {
+        if (data.success && data.data.heroConfigured) {
+          setSlides(data.data.hero.map((item) => ({
+            src: item.url,
+            alt: item.alt || 'LAHIT animal rescue',
+          })));
+          setCurrent(0);
+        } else if (data.success && data.data.hero.length > 0) {
           setSlides(data.data.hero.map((item) => ({
             src: item.url,
             alt: item.alt || 'LAHIT animal rescue',
@@ -51,6 +57,7 @@ export default function HeroSection() {
   }, []);
 
   useEffect(() => {
+    if (slides.length === 0) return undefined;
     const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mql.matches) return;
     const id = setInterval(() => setCurrent((c) => (c + 1) % slides.length), 6000);
@@ -64,7 +71,7 @@ export default function HeroSection() {
   return (
     <section id="home" className="relative h-[100dvh] min-h-0 max-h-[100dvh] overflow-hidden bg-primary text-white">
       <div className="absolute inset-0">
-        <motion.div
+        {slides.length > 0 && <motion.div
           key={slides[current].src}
           className="absolute inset-0"
           initial={{ opacity: 0 }}
@@ -79,7 +86,7 @@ export default function HeroSection() {
             sizes="100vw"
             className="object-cover object-[72%_center] sm:object-[68%_center]"
           />
-        </motion.div>
+        </motion.div>}
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,28,19,0.48)_0%,rgba(4,28,19,0.435)_38%,rgba(4,28,19,0.12)_72%,rgba(4,28,19,0.06)_100%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(4,28,19,0.45)_0%,transparent_40%)]" />
