@@ -45,7 +45,9 @@ export default function AdminStats() {
       const res = await fetch('/api/stats', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(stats)
+        body: JSON.stringify(Object.fromEntries(
+          Object.entries(stats).map(([name, value]) => [name, value === '' ? 0 : Number(value)])
+        ))
       });
       const data = await res.json();
       
@@ -65,7 +67,7 @@ export default function AdminStats() {
     const { name, value } = e.target;
     setStats(prev => ({
       ...prev,
-      [name]: parseInt(value) || 0
+      [name]: value
     }));
   }
 

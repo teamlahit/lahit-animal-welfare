@@ -45,16 +45,22 @@ export async function PUT(request, { params }) {
 async function sendVolunteerInvite(volunteer, request) {
   const recipient = volunteer.email.trim().toLowerCase();
   const { token } = await createResetToken({ email: recipient, purpose: 'invite' });
-  const setNewPasswordLink = `${getAppUrl(request)}/candidate/reset?token=${token}`;
+  const appUrl = getAppUrl(request);
+  const setNewPasswordLink = `${appUrl}/candidate/reset?token=${token}`;
+  const loginLink = `${appUrl}/candidate/login/`;
+  const name = volunteer.name?.trim() || 'volunteer';
+  const safeName = name.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[character]));
 
   let mailSent = false;
   let mailError = null;
   try {
     const result = await sendMail({
       to: recipient,
-      subject: 'Your LAHIT volunteer account is ready',
-      text: `Hi ${volunteer.name}, your LAHIT volunteer application has been approved. Set your password: ${setNewPasswordLink}`,
-      html: `<p>Hi ${volunteer.name},</p><p>Your LAHIT volunteer application has been approved. Click below to set a password and activate your account (valid for 48 hours):</p><p><a href="${setNewPasswordLink}">Set your password</a></p>`,
+      subject: 'Welcome to LAHIT — set up your volunteer account',
+      text: `Hello ${name},\n\nYour LAHIT volunteer application has been approved. Set a password to activate your volunteer account using this link:\n${setNewPasswordLink}\n\nThis link expires in 48 hours. After setting your password, sign in to your volunteer account here:\n${loginLink}\n\nIf you did not apply to volunteer with LAHIT, you can ignore this email.`,
+      html: `<div style="margin:0;background:#f4f7f4;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#173f30"><div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2ebe4;border-radius:16px;padding:32px"><p style="margin:0 0 20px;color:#397254;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">LAHIT volunteer team</p><h1 style="margin:0 0 16px;font-size:24px;line-height:1.3">Welcome, ${safeName}!</h1><p style="font-size:16px;line-height:1.6">Your volunteer application has been approved. Set a password to activate your volunteer account.</p><p style="margin:28px 0"><a href="${setNewPasswordLink}" style="display:inline-block;border-radius:8px;background:#1d563d;padding:14px 22px;color:#ffffff;font-weight:700;text-decoration:none">Set your password</a></p><p style="font-size:14px;line-height:1.6;color:#52665a">This link expires in 48 hours. Once your password is set, you can <a href="${loginLink}" style="color:#1d563d">sign in to your volunteer account</a>.</p><p style="font-size:14px;line-height:1.6;color:#52665a">If you did not apply to volunteer with LAHIT, you can ignore this email.</p></div></div>`,
     });
     mailSent = !result?.dev;
   } catch (err) {
