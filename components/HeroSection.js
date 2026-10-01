@@ -7,22 +7,23 @@ import Image from 'next/image';
 import Container from './ui/Container';
 import Button from './ui/Button';
 import { getClientJson } from '@/lib/client-fetch';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 const heroSlides = [
   {
-    src: '/images/rescue-hero-v2.webp',
+    src: siteAssetUrl('/images/rescue-hero-v2.webp'),
     alt: 'A LAHIT volunteer caring for a rescued dog in Uttarakhand',
   },
   {
-    src: '/images/rescue-hero-v3.webp',
+    src: siteAssetUrl('/images/rescue-hero-v3.webp'),
     alt: 'Volunteers caring for rescued dogs in Uttarakhand',
   },
   {
-    src: '/images/rescue-hero-v5.webp',
+    src: siteAssetUrl('/images/rescue-hero-v5.webp'),
     alt: 'A veterinarian examining a rescued dog during a clinic check-up',
   },
   {
-    src: '/images/rescue-hero-v6.webp',
+    src: siteAssetUrl('/images/rescue-hero-v6.webp'),
     alt: 'Veterinary staff providing medical treatment to a rescued animal',
   },
 ];
@@ -41,13 +42,13 @@ export default function HeroSection() {
       .then((data) => {
         if (data.success && data.data.heroConfigured) {
           setSlides(data.data.hero.map((item) => ({
-            src: item.url,
+            src: siteAssetUrl(item.url),
             alt: item.alt || 'LAHIT animal rescue',
           })));
           setCurrent(0);
         } else if (data.success && data.data.hero.length > 0) {
           setSlides(data.data.hero.map((item) => ({
-            src: item.url,
+            src: siteAssetUrl(item.url),
             alt: item.alt || 'LAHIT animal rescue',
           })));
           setCurrent(0);

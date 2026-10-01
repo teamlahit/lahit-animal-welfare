@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { BarChart3, Dog, FileText, Heart, LayoutDashboard, LogOut, Menu, PawPrint, Send, Settings, Siren, User, X } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Image from 'next/image';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 const navItems = [
   { href: '/candidate/', label: 'Overview', icon: LayoutDashboard },
@@ -28,7 +29,7 @@ export default function CandidateShell({ children, user }) {
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-[min(272px,calc(100vw-1rem))] flex-col bg-primary text-white transition-transform duration-300 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex min-h-24 items-center justify-between border-b border-white/10 px-6">
           <Link href="/candidate/" onClick={() => setOpen(false)} className="flex items-center gap-3">
-            <span className="relative h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-white"><Image src="/lahit.png" alt="LAHIT" fill className="object-cover" /></span>
+            <span className="relative h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-white"><Image src={siteAssetUrl('/lahit.png')} alt="LAHIT" fill className="object-cover" /></span>
             <span><span className="block text-xl font-black tracking-[-0.04em]">LAHIT</span><span className="block text-[0.58rem] font-bold uppercase tracking-[0.18em] text-white/45">Volunteer hub</span></span>
           </Link>
           <button type="button" onClick={() => setOpen(false)} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 lg:hidden"><X className="h-4 w-4" /></button>

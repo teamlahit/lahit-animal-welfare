@@ -15,25 +15,16 @@ import Container from './ui/Container';
 import { getClientJson } from '@/lib/client-fetch';
 import Image from 'next/image';
 import Link from 'next/link';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 const quickLinks = [
   { name: 'Home', href: '/' },
-  { name: 'About Us', href: '/#about' },
-  { name: 'Uttarkashi Animal Rescue', href: '/uttarkashi/' },
+  { name: 'About & Impact', href: '/#about' },
+  { name: 'Report a Rescue', href: '/#emergency' },
   { name: 'Rescue Stories', href: '/#stories' },
-  { name: 'Adopt', href: '/animals' },
-  { name: 'Field Notes', href: '/blog' },
+  { name: 'Adopt', href: '/animals/' },
   { name: 'Volunteer', href: '/#volunteer' },
   { name: 'Donate', href: '/#donate' },
-];
-
-const services = [
-  { name: 'Animal Rescue', href: '/#emergency' },
-  { name: 'Medical Treatment', href: '/#about' },
-  { name: 'Adoption', href: '/animals' },
-  { name: 'Feeding Programs', href: '/#about' },
-  { name: 'Sterilization', href: '/#about' },
-  { name: 'Awareness Camps', href: '/#volunteer' },
 ];
 
 export default function Footer() {
@@ -62,13 +53,13 @@ export default function Footer() {
       {/* Main Footer */}
       <div className="section-padding">
         <Container>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {/* Brand Column */}
             <div className="col-span-2 sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2 mb-6">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-base-100 shadow-md">
                   <Image
-                    src="/lahit.png"
+                    src={siteAssetUrl('/lahit.png')}
                     alt="LAHIT Animal Welfare Logo"
                     fill
                     className="object-cover"
@@ -110,23 +101,6 @@ export default function Footer() {
                       className="text-primary-content/70 hover:text-primary-content hover:translate-x-1 inline-block transition-all"
                     >
                       {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Services */}
-            <div className="min-w-0">
-              <h4 className="text-lg font-semibold mb-6">Our Services</h4>
-              <ul className="space-y-3">
-                {services.map((service) => (
-                  <li key={service.name}>
-                    <Link
-                      href={service.href}
-                      className="text-primary-content/70 hover:text-primary-content hover:translate-x-1 inline-block transition-all"
-                    >
-                      {service.name}
                     </Link>
                   </li>
                 ))}

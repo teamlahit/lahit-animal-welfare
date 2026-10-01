@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { BarChart3, Dog, FileText, Heart, Image as ImageIcon, LayoutDashboard, LogOut, PawPrint, Settings, Siren, User, Users, X } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Image from 'next/image';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 const menuGroups = [
   {
@@ -83,7 +84,7 @@ export default function AdminSidebar({ open, onClose }) {
         <div className="flex min-h-24 items-center justify-between border-b border-white/10 px-6">
           <Link href="/admin" onClick={onClose} className="flex items-center gap-3">
             <span className="relative h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-white">
-              <Image src="/lahit.png" alt="LAHIT" fill className="object-cover" />
+              <Image src={siteAssetUrl('/lahit.png')} alt="LAHIT" fill className="object-cover" />
             </span>
             <span>
               <span className="block text-xl font-black tracking-[-0.04em]">LAHIT</span>

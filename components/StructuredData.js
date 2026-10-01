@@ -1,4 +1,5 @@
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 export default function StructuredData() {
   const structuredData = {
@@ -9,7 +10,7 @@ export default function StructuredData() {
         '@id': `${SITE_URL}/#organization`,
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/lahit.png`,
+        logo: `${SITE_URL}${siteAssetUrl('/lahit.png')}`,
         description: SITE_DESCRIPTION,
         areaServed: [
           { '@type': 'AdministrativeArea', name: 'Uttarkashi, Uttarakhand, India' },

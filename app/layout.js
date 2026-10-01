@@ -2,6 +2,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import StructuredData from '@/components/StructuredData';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -18,9 +19,9 @@ export const metadata = {
   alternates: { canonical: '/' },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   icons: {
-    icon: '/lahit.png',
-    shortcut: '/lahit.png',
-    apple: '/lahit.png',
+    icon: siteAssetUrl('/lahit.png'),
+    shortcut: siteAssetUrl('/lahit.png'),
+    apple: siteAssetUrl('/lahit.png'),
   },
   openGraph: {
     title: 'LAHIT Animal Welfare | Animal Rescue in Uttarkashi, Uttarakhand',

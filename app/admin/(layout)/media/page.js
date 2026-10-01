@@ -5,18 +5,11 @@ import { Trash2, Edit, Image as ImageIcon, Search } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import { uploadImage } from '@/lib/upload-image';
-
-const builtInMedia = [
-  { filename: 'rescue-hero-v2.webp', url: '/images/rescue-hero-v2.webp', category: 'hero', alt: 'A LAHIT volunteer caring for a rescued dog in Uttarakhand' },
-  { filename: 'rescue-hero-v3.webp', url: '/images/rescue-hero-v3.webp', category: 'hero', alt: 'Volunteers caring for rescued dogs in Uttarakhand' },
-  { filename: 'rescue-hero-v5.webp', url: '/images/rescue-hero-v5.webp', category: 'hero', alt: 'A veterinarian examining a rescued dog during a clinic check-up' },
-  { filename: 'rescue-hero-v6.webp', url: '/images/rescue-hero-v6.webp', category: 'hero', alt: 'Veterinary staff providing medical treatment to a rescued animal' },
-  { filename: 'hero-dog.jpg', url: '/images/hero-dog.jpg', category: 'general', alt: 'LAHIT rescue dog' },
-  { filename: 'lahit.png', url: '/lahit.png', category: 'general', alt: 'LAHIT logo' },
-].map((item) => ({ ...item, _id: `built-in:${item.url}`, type: 'image', isBuiltIn: true }));
+import { siteAssets, siteAssetUrl } from '@/lib/site-assets';
 
 export default function AdminMedia() {
   const [media, setMedia] = useState([]);
+  const [builtInMedia, setBuiltInMedia] = useState(siteAssets.map((item) => ({ ...item, _id: `built-in:${item.url}`, sourceUrl: item.url, type: 'image', isBuiltIn: true })));
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingMedia, setEditingMedia] = useState(null);
@@ -42,11 +35,24 @@ export default function AdminMedia() {
 
   async function fetchMedia() {
     try {
-      const res = await fetch('/api/media');
-      const data = await res.json();
-      if (data.success) {
-        setMedia(data.data);
-      }
+      const [res, settingsRes] = await Promise.all([fetch('/api/media'), fetch('/api/media/site-assets')]);
+      const [data, settingsData] = await Promise.all([res.json(), settingsRes.json()]);
+      if (data.success) setMedia(data.data);
+      const overrides = settingsData.success ? settingsData.data : [];
+      setBuiltInMedia(siteAssets.map((asset) => {
+        const override = overrides.find((item) => item.sourceUrl === asset.url);
+        return {
+          ...asset,
+          ...override,
+          _id: `built-in:${asset.url}`,
+          sourceUrl: asset.url,
+          url: siteAssetUrl(asset.url),
+          replacementUrl: override?.replacementUrl || '',
+          isOverridden: Boolean(override?.replacementUrl),
+          type: 'image',
+          isBuiltIn: true,
+        };
+      }));
     } catch (error) {
       console.error('Error fetching media:', error);
     } finally {
@@ -61,7 +67,7 @@ export default function AdminMedia() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!formData.url) {
+      if (!formData.url) {
       setMessage({ type: 'error', text: 'Please upload an image.' });
       return;
     }
@@ -69,18 +75,20 @@ export default function AdminMedia() {
     setSubmitting(true);
 
     try {
-      const url = editingMedia ? `/api/media/${editingMedia._id}` : '/api/media';
+      const url = editingMedia?.isBuiltIn ? '/api/media/site-assets' : editingMedia ? `/api/media/${editingMedia._id}` : '/api/media';
       const method = editingMedia ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(editingMedia?.isBuiltIn
+          ? { sourceUrl: editingMedia.sourceUrl, replacementUrl: formData.url }
+          : formData)
       });
       const data = await res.json();
 
       if (data.success) {
-        setMessage({ type: 'success', text: editingMedia ? 'Media updated successfully!' : 'Media added successfully!' });
+        setMessage({ type: 'success', text: editingMedia?.isBuiltIn ? 'Site image replaced successfully.' : editingMedia ? 'Media updated successfully!' : 'Media added successfully!' });
         fetchMedia();
         resetForm();
       } else {
@@ -138,11 +146,33 @@ export default function AdminMedia() {
     }
   }
 
+  async function restoreSiteAsset(item) {
+    setDeletingId(item._id);
+    try {
+      const res = await fetch('/api/media/site-assets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceUrl: item.sourceUrl, replacementUrl: '' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMedia();
+        setMessage({ type: 'success', text: `${item.filename} restored to its built-in image.` });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Could not restore the original image.' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Could not restore the original image.' });
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   function editMedia(item) {
     setEditingMedia(item);
     setFormData({
       filename: item.filename,
-      url: item.url,
+      url: item.isBuiltIn ? '' : item.url,
       type: 'image',
       category: item.category,
       alt: item.alt || '',
@@ -200,7 +230,7 @@ export default function AdminMedia() {
       </div>
 
       <div className="mb-6 rounded-2xl border border-primary/10 bg-base-100 px-5 py-4 text-sm text-primary/65">
-        <strong className="text-primary">Two image types appear here.</strong> “Site file” images are built into the website and can’t be edited here. “Uploaded image” files can be edited or deleted. Removing an image from the homepage carousel does not delete the file.
+        <strong className="text-primary">Replace built-in site images here.</strong> Upload a replacement to update the image wherever the site uses it. Restore the original at any time. Uploaded images can be edited or deleted; removing a carousel slide keeps its image in this library.
       </div>
 
       {message.text && (
@@ -229,13 +259,14 @@ export default function AdminMedia() {
                     value={formData.filename}
                     onChange={handleChange}
                     required
+                    disabled={editingMedia?.isBuiltIn}
                     className="input input-bordered w-full"
-                    placeholder="hero-dog.jpg"
+                    placeholder="animal-photo.jpg"
                   />
                 </div>
                 
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">Homepage placement</label>
+              {!editingMedia?.isBuiltIn && <div>
+                <label className="block text-sm font-medium text-primary mb-2">Library category</label>
                 <select
                   name="category"
                   value={formData.category}
@@ -250,7 +281,7 @@ export default function AdminMedia() {
                   <option value="general">General site image</option>
                   <option value="blog">Blog</option>
                 </select>
-              </div>
+              </div>}
                 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-primary mb-2">Image</label>
@@ -259,13 +290,17 @@ export default function AdminMedia() {
                       <div className="relative mb-3 h-48 w-full overflow-hidden rounded-lg">
                         <Image src={formData.url} alt={formData.alt || formData.filename || 'Media preview'} fill unoptimized className="object-cover" />
                       </div>
+                    ) : editingMedia?.isBuiltIn ? (
+                      <div className="relative mb-3 h-48 w-full overflow-hidden rounded-lg">
+                        <Image src={editingMedia.url} alt={editingMedia.alt || editingMedia.filename} fill unoptimized className="object-cover" />
+                      </div>
                     ) : (
                       <div className="mb-3 flex h-48 w-full items-center justify-center rounded-lg border border-dashed border-base-300 text-sm text-primary/60">
                         No image selected
                       </div>
                     )}
                     <label className="btn btn-sm btn-primary cursor-pointer">
-                      {uploadingImage ? 'Uploading...' : formData.url ? 'Replace image' : 'Upload image'}
+                      {uploadingImage ? 'Uploading...' : editingMedia?.isBuiltIn ? 'Upload replacement' : formData.url ? 'Replace image' : 'Upload image'}
                       <input
                         type="file"
                         accept="image/*"
@@ -277,7 +312,7 @@ export default function AdminMedia() {
                   </div>
                 </div>
                 
-              <div>
+              {!editingMedia?.isBuiltIn && <div>
                   <label className="block text-sm font-medium text-primary mb-2">Alt Text</label>
                   <input
                     type="text"
@@ -287,9 +322,9 @@ export default function AdminMedia() {
                     className="input input-bordered w-full"
                     placeholder="Image description"
                   />
-                </div>
+                </div>}
                 
-                <div className="md:col-span-2">
+                {!editingMedia?.isBuiltIn && <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-primary mb-2">Caption</label>
                   <input
                     type="text"
@@ -299,7 +334,7 @@ export default function AdminMedia() {
                     className="input input-bordered w-full"
                     placeholder="Optional caption"
                   />
-                </div>
+                </div>}
               </div>
               
               <div className="mt-6 flex gap-3">
@@ -308,7 +343,7 @@ export default function AdminMedia() {
                   variant="primary"
                   loading={submitting}
                 >
-                  {editingMedia ? 'Update Media' : 'Add Media'}
+                  {editingMedia?.isBuiltIn ? 'Replace site image' : editingMedia ? 'Update Media' : 'Add Media'}
                 </Button>
                 <Button
                   type="button"
@@ -371,14 +406,17 @@ export default function AdminMedia() {
                       </div>
                     )}
                     <div className={`absolute top-2 right-2 badge badge-sm ${item.isBuiltIn ? 'badge-neutral' : 'badge-primary'}`}>
-                      {item.isBuiltIn ? 'Site file' : 'Uploaded image'}
+                      {item.isBuiltIn ? (item.isOverridden ? 'Custom replacement' : 'Built-in image') : 'Uploaded image'}
                     </div>
                   </div>
                   <div className="card-body p-4">
                     <p className="text-sm font-medium text-primary truncate">{item.filename}</p>
                     <p className="text-xs text-primary/60">{({ hero: 'Homepage hero', volunteer: 'Volunteer section', rescue: 'Rescue stories', animal: 'Animal profiles', event: 'Events', general: 'General site image', blog: 'Blog' })[item.category] || 'General site image'}</p>
                     {item.isBuiltIn ? (
-                      <p className="mt-3 text-xs font-semibold text-primary/45">Built into the website</p>
+                      <div className="mt-3 flex gap-2">
+                        <button onClick={() => editMedia(item)} className="btn btn-xs btn-ghost flex-1 text-primary" aria-label={`Replace ${item.filename}`}>Replace image</button>
+                        {item.isOverridden && <button onClick={() => restoreSiteAsset(item)} disabled={deletingId === item._id} className="btn btn-xs btn-ghost text-primary/70">Restore original</button>}
+                      </div>
                     ) : (
                       <div className="flex gap-2 mt-3">
                         <button

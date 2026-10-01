@@ -27,6 +27,9 @@ const SettingsSchema = new mongoose.Schema({
 
   // Homepage hero carousel images (undefined keeps the original site defaults)
   heroImages: { type: Array, default: undefined },
+
+  // Uploaded replacements for images bundled with the site
+  siteAssetOverrides: { type: Array, default: [] },
   
   // Rescue locations
   rescueLocations: { type: Array, default: [] },

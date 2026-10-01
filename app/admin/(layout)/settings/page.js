@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { uploadImage } from '@/lib/upload-image';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 const defaultHeroImages = [
   { url: '/images/rescue-hero-v2.webp', alt: 'A LAHIT volunteer caring for a rescued dog in Uttarakhand', label: 'Rescue care' },
@@ -543,7 +544,7 @@ export default function AdminSettings() {
                   {settings.heroImages.map((image, index) => (
                     <div key={`${image.url}-${index}`} className="overflow-hidden rounded-xl border border-base-300 bg-base-100">
                       <div className="relative h-40 bg-base-200">
-                        <Image src={image.url} alt={image.alt || `Homepage hero image ${index + 1}`} fill unoptimized className="object-cover" />
+                        <Image src={siteAssetUrl(image.url)} alt={image.alt || `Homepage hero image ${index + 1}`} fill unoptimized className="object-cover" />
                         <span className="badge badge-primary absolute left-3 top-3">Slide {index + 1}</span>
                       </div>
                       <div className="flex items-center justify-between gap-2 p-3">

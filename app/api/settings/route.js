@@ -4,6 +4,7 @@ import Settings from '@/models/Settings';
 import { requireAdmin, unauthorizedResponse } from '@/lib/admin-api';
 import { uploadImageSource } from '@/lib/cloudinary';
 import { PUBLIC_CACHE_CONTROL } from '@/lib/cache-headers';
+import { siteAssets } from '@/lib/site-assets';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +86,19 @@ export async function PUT(request) {
       body.heroImages = body.heroImages.map((image) => ({
         url: image.url,
         alt: String(image.alt || '').trim().slice(0, 300),
+      }));
+    }
+    if (Array.isArray(body.siteAssetOverrides)) {
+      const allowedUrls = new Set(siteAssets.map((asset) => asset.url));
+      if (body.siteAssetOverrides.some((asset) => (
+        !allowedUrls.has(asset.sourceUrl)
+        || !/^https:\/\/res\.cloudinary\.com\//.test(asset.replacementUrl || '')
+      ))) {
+        return NextResponse.json({ success: false, error: 'A site image replacement is invalid.' }, { status: 400 });
+      }
+      body.siteAssetOverrides = body.siteAssetOverrides.map((asset) => ({
+        sourceUrl: asset.sourceUrl,
+        replacementUrl: asset.replacementUrl,
       }));
     }
     body.updatedAt = new Date();

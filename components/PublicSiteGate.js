@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Mail, Phone, Wrench } from 'lucide-react';
 import { getClientJson } from '@/lib/client-fetch';
+import { siteAssetUrl } from '@/lib/site-assets';
 
 export default function PublicSiteGate({ children }) {
   const [settings, setSettings] = useState(null);
@@ -20,7 +21,7 @@ export default function PublicSiteGate({ children }) {
     <main className="flex min-h-screen items-center justify-center bg-primary px-5 py-12 text-white">
       <div className="w-full max-w-xl text-center">
         <span className="relative mx-auto block h-20 w-20 overflow-hidden rounded-full border border-white/20 bg-white shadow-xl">
-          <Image src="/lahit.png" alt="LAHIT" fill priority className="object-cover" />
+          <Image src={siteAssetUrl('/lahit.png')} alt="LAHIT" fill priority className="object-cover" />
         </span>
         <span className="mt-8 inline-flex items-center gap-2 rounded-full border border-accent/35 bg-accent/10 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-accent">
           <Wrench className="h-4 w-4" /> Brief maintenance
