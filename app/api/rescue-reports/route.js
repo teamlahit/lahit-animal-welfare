@@ -13,10 +13,14 @@ function isValidReportImage(image) {
   return !image || (image.startsWith('data:image/') && image.length <= 2_000_000);
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     if (!(await requireAdmin())) return unauthorizedResponse();
     await connectDB();
+    if (new URL(request.url).searchParams.get('summary') === 'true') {
+      const newCount = await RescueReport.countDocuments({ status: 'new' });
+      return NextResponse.json({ success: true, data: { newCount } }, { headers: { 'Cache-Control': 'no-store' } });
+    }
     const reports = await RescueReport.find().sort({ createdAt: -1 }).lean();
     return NextResponse.json({ success: true, data: reports }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

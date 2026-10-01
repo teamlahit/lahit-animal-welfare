@@ -41,14 +41,13 @@ export default function AdminSidebar({ open, onClose }) {
   const pathname = usePathname();
   const [newReportCount, setNewReportCount] = useState(0);
   const [newAdoptionCount, setNewAdoptionCount] = useState(0);
+  const [pendingVolunteerCount, setPendingVolunteerCount] = useState(0);
 
   const fetchReportCount = useCallback(async () => {
     try {
-      const response = await fetch('/api/rescue-reports', { cache: 'no-store' });
+      const response = await fetch('/api/rescue-reports?summary=true', { cache: 'no-store' });
       const data = await response.json();
-      if (data.success) {
-        setNewReportCount(data.data.filter((report) => report.status === 'new').length);
-      }
+      if (data.success) setNewReportCount(data.data.newCount);
     } catch {
       setNewReportCount(0);
     }
@@ -56,26 +55,46 @@ export default function AdminSidebar({ open, onClose }) {
 
   const fetchAdoptionCount = useCallback(async () => {
     try {
-      const response = await fetch('/api/adoption-inquiries', { cache: 'no-store' });
+      const response = await fetch('/api/adoption-inquiries?summary=true', { cache: 'no-store' });
       const data = await response.json();
-      if (data.success) setNewAdoptionCount(data.data.filter((inquiry) => inquiry.status === 'new').length);
+      if (data.success) setNewAdoptionCount(data.data.newCount);
     } catch {
       setNewAdoptionCount(0);
+    }
+  }, []);
+
+  const fetchPendingVolunteerCount = useCallback(async () => {
+    try {
+      const response = await fetch('/api/volunteers?summary=true', { cache: 'no-store' });
+      const data = await response.json();
+      if (data.success) setPendingVolunteerCount(data.data.pendingCount);
+    } catch {
+      setPendingVolunteerCount(0);
     }
   }, []);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(fetchReportCount, 0);
     const adoptionTimeoutId = window.setTimeout(fetchAdoptionCount, 0);
+    const volunteerTimeoutId = window.setTimeout(fetchPendingVolunteerCount, 0);
+    const reportIntervalId = window.setInterval(fetchReportCount, 30_000);
+    const adoptionIntervalId = window.setInterval(fetchAdoptionCount, 30_000);
+    const volunteerIntervalId = window.setInterval(fetchPendingVolunteerCount, 30_000);
     window.addEventListener('rescue-reports-changed', fetchReportCount);
     window.addEventListener('adoption-inquiries-changed', fetchAdoptionCount);
+    window.addEventListener('volunteers-changed', fetchPendingVolunteerCount);
     return () => {
       window.clearTimeout(timeoutId);
       window.clearTimeout(adoptionTimeoutId);
+      window.clearTimeout(volunteerTimeoutId);
+      window.clearInterval(reportIntervalId);
+      window.clearInterval(adoptionIntervalId);
+      window.clearInterval(volunteerIntervalId);
       window.removeEventListener('rescue-reports-changed', fetchReportCount);
       window.removeEventListener('adoption-inquiries-changed', fetchAdoptionCount);
+      window.removeEventListener('volunteers-changed', fetchPendingVolunteerCount);
     };
-  }, [fetchAdoptionCount, fetchReportCount, pathname]);
+  }, [fetchAdoptionCount, fetchPendingVolunteerCount, fetchReportCount, pathname]);
 
   return (
     <>
@@ -115,6 +134,11 @@ export default function AdminSidebar({ open, onClose }) {
                         {item.href === '/admin/adoption-inquiries' && newAdoptionCount > 0 && (
                           <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1 text-[0.62rem] font-black text-white">
                             {newAdoptionCount > 99 ? '99+' : newAdoptionCount}
+                          </span>
+                        )}
+                        {item.href === '/admin/volunteers' && pendingVolunteerCount > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1 text-[0.62rem] font-black text-white" aria-label={`${pendingVolunteerCount} pending volunteer applications`}>
+                            {pendingVolunteerCount > 99 ? '99+' : pendingVolunteerCount}
                           </span>
                         )}
                       </Link>

@@ -52,7 +52,7 @@ export default function AdminVolunteers() {
         setVolunteers(prev => prev.map(v => 
           v._id === id ? { ...v, status: previousStatus } : v
         ));
-      }
+      } else window.dispatchEvent(new Event('volunteers-changed'));
     } catch (error) {
       console.error('Error updating status:', error);
       setVolunteers(prev => prev.map(v => 
@@ -76,6 +76,7 @@ export default function AdminVolunteers() {
       const data = await res.json();
       if (data.success) {
         setVolunteers(prev => prev.map(v => v._id === id ? { ...v, status: 'approved' } : v));
+        window.dispatchEvent(new Event('volunteers-changed'));
         setInviteLink(data.data?.setNewPasswordLink || null);
         setInviteMessage({
           type: data.data?.mailSent || data.data?.setNewPasswordLink ? 'success' : 'error',
@@ -137,6 +138,7 @@ export default function AdminVolunteers() {
       const data = await res.json();
       if (data.success) {
         setVolunteers(prev => prev.filter(v => v._id !== id));
+        window.dispatchEvent(new Event('volunteers-changed'));
       }
     } catch (error) {
       console.error('Error deleting volunteer:', error);

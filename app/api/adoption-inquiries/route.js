@@ -7,10 +7,14 @@ import { apiErrorResponse } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
     if (!(await requireAdmin())) return unauthorizedResponse();
     await connectDB();
+    if (new URL(request.url).searchParams.get('summary') === 'true') {
+      const newCount = await AdoptionInquiry.countDocuments({ status: 'new' });
+      return NextResponse.json({ success: true, data: { newCount } }, { headers: { 'Cache-Control': 'no-store' } });
+    }
     const inquiries = await AdoptionInquiry.find().sort({ createdAt: -1 }).lean();
     return NextResponse.json({ success: true, data: inquiries }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

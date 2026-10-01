@@ -6,10 +6,16 @@ import { apiErrorResponse } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
     if (!(await requireAdmin())) return unauthorizedResponse();
     await connectDB();
+    if (new URL(request.url).searchParams.get('summary') === 'true') {
+      const pendingCount = await Volunteer.countDocuments({ status: 'pending' });
+      return NextResponse.json({ success: true, data: { pendingCount } }, {
+        headers: { 'Cache-Control': 'no-store, must-revalidate' },
+      });
+    }
     const volunteers = await Volunteer.find().sort({ createdAt: -1 }).lean();
     return NextResponse.json({ success: true, data: volunteers });
   } catch (error) {
