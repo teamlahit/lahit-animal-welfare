@@ -96,12 +96,12 @@ export default async function AdminDashboard() {
         </section>
 
         <div className="grid gap-5">
-          <section className="admin-panel bg-primary text-white">
+          <section className="admin-panel admin-attention-panel">
             <div className="flex items-center justify-between"><span className="admin-eyebrow text-accent">Needs attention</span><Siren className="h-5 w-5 text-accent" /></div>
             <div className="mt-7 grid gap-4 sm:grid-cols-3">
-              <div><p className="text-4xl font-black tracking-[-0.06em] text-accent">{data.urgentReports}</p><p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-white/45">Open rescues</p></div>
-              <div><p className="text-4xl font-black tracking-[-0.06em] text-accent">{data.pendingVolunteers}</p><p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-white/45">New volunteers</p></div>
-              <div><p className="text-4xl font-black tracking-[-0.06em] text-accent">{data.newAdoptions}</p><p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-white/45">Adoption requests</p></div>
+              <div><p className="admin-attention-count text-4xl font-black tracking-[-0.06em]">{data.urgentReports}</p><p className="admin-attention-label mt-2 text-xs font-bold uppercase tracking-[0.08em]">Open rescues</p></div>
+              <div><p className="admin-attention-count text-4xl font-black tracking-[-0.06em]">{data.pendingVolunteers}</p><p className="admin-attention-label mt-2 text-xs font-bold uppercase tracking-[0.08em]">New volunteers</p></div>
+              <div><p className="admin-attention-count text-4xl font-black tracking-[-0.06em]">{data.newAdoptions}</p><p className="admin-attention-label mt-2 text-xs font-bold uppercase tracking-[0.08em]">Adoption requests</p></div>
             </div>
           </section>
 

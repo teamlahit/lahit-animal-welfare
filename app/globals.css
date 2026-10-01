@@ -606,6 +606,23 @@ button {
   padding: 1.5rem;
 }
 
+.admin-attention-panel {
+  background: var(--primary-green);
+  color: #fff;
+}
+
+.admin-attention-panel .admin-eyebrow {
+  color: var(--accent-orange);
+}
+
+.admin-attention-count {
+  color: var(--signal);
+}
+
+.admin-attention-label {
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .admin-panel-heading {
   display: flex;
   align-items: center;
