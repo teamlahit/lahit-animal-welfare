@@ -19,6 +19,7 @@ import { siteAssetUrl } from '@/lib/site-assets';
 
 const quickLinks = [
   { name: 'Home', href: '/' },
+  { name: 'Animal rescue in Uttarkashi', href: '/uttarkashi/' },
   { name: 'About & Impact', href: '/#about' },
   { name: 'Report a Rescue', href: '/#emergency' },
   { name: 'Rescue Stories', href: '/#stories' },

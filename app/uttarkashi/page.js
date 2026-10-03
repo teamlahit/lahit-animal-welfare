@@ -53,6 +53,27 @@ export default function UttarkashiPage() {
                 </ul>
               </div>
             </div>
+            <section className="mt-12 rounded-[1.75rem] bg-primary p-7 text-white sm:p-10" aria-labelledby="uttarkashi-faq-title">
+              <h2 id="uttarkashi-faq-title" className="text-2xl font-black tracking-tight sm:text-3xl">Animal rescue in Uttarkashi: common questions</h2>
+              <div className="mt-7 grid gap-7 md:grid-cols-2">
+                <div>
+                  <h3 className="font-bold">How do I report a stray or injured animal in Uttarkashi?</h3>
+                  <p className="mt-2 leading-relaxed text-white/70">Use LAHIT&apos;s rescue report form and include the animal&apos;s location, condition, and a way to contact you. A photo can help if it is safe to take one. Volunteers review reports according to urgency, location, and available capacity.</p>
+                </div>
+                <div>
+                  <h3 className="font-bold">Is LAHIT a registered NGO or emergency animal ambulance?</h3>
+                  <p className="mt-2 leading-relaxed text-white/70">No. LAHIT is a volunteer-led animal welfare initiative and is not currently a registered NGO or emergency dispatch service. For a life-threatening situation, contact a local veterinarian or appropriate emergency service first.</p>
+                </div>
+                <div>
+                  <h3 className="font-bold">Can I adopt or volunteer with LAHIT?</h3>
+                  <p className="mt-2 leading-relaxed text-white/70">You can review animals currently listed for adoption and submit a volunteer application through the website. Listings and volunteer opportunities depend on current availability and team capacity.</p>
+                </div>
+                <div>
+                  <h3 className="font-bold">Does LAHIT help outside Uttarkashi?</h3>
+                  <p className="mt-2 leading-relaxed text-white/70">LAHIT shares animal welfare work across Uttarakhand, but each report is considered individually. Response depends on distance, urgency, safety, and volunteer and veterinary resources available at the time.</p>
+                </div>
+              </div>
+            </section>
             <p className="mt-8 text-sm leading-relaxed text-primary/65">LAHIT is a volunteer-led initiative and is not currently a registered NGO. See our <Link href="/blog/" className="font-semibold underline underline-offset-4">field notes</Link> for updates on our animal welfare work across Uttarakhand.</p>
           </Container>
         </section>
