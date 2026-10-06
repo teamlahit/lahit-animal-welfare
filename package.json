@@ -12,7 +12,6 @@
     "migrate:images": "node scripts/migrate-images-to-cloudinary.mjs"
   },
   "dependencies": {
-    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "dotenv": "^17.3.1",

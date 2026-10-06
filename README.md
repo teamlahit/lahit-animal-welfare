@@ -167,7 +167,7 @@ lahit-welfare/
 
 ## Deployment
 
-LAHIT is a server-rendered Next.js application. Deploy it to a platform that supports a Next.js server, such as [Vercel](https://vercel.com/), and configure the production environment variables in the hosting dashboard.
+LAHIT is a server-rendered Next.js application. Deploy it to a platform that supports a Next.js server, and configure the production environment variables in the hosting dashboard.
 
 Before going live:
 
